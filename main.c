@@ -7,6 +7,7 @@
 
 u32 t_scale = 1;
 u32 erf_eth_pad[2] = {0, 0};
+u8 isReverseEndian = 0;
 
 void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 {
@@ -57,14 +58,35 @@ int main()
 		fprintf(stderr, "Failed to read pcap header\n");
 		return -1;
 	}
-	if (file_header.magic == PCAPHEADER_MAGIC_USEC) t_scale = 1000;
+	u32 magic = file_header.magic;
 
-	if (file_header.magic != PCAPHEADER_MAGIC_NANO && file_header.magic != PCAPHEADER_MAGIC_USEC)
+	if (magic == PCAPHEADER_MAGIC_USEC)
+	{
+		t_scale = 1000;
+		isReverseEndian = 0;
+	}
+	else if (magic == swap32(PCAPHEADER_MAGIC_USEC))
+	{
+		t_scale = 1000;
+		isReverseEndian = 1;
+	}
+	else if (magic == PCAPHEADER_MAGIC_NANO)
+	{
+		t_scale = 1;
+		isReverseEndian = 0;
+	}
+	else if (magic == swap32(PCAPHEADER_MAGIC_NANO))
+	{
+		t_scale = 1;
+		isReverseEndian = 1;
+	}
+	else
 	{
 		fprintf(stderr, "Invalid PCAP format %08x\n", file_header.magic);
 		return -1;
 	}
 
+	if (isReverseEndian) fprintf(stderr, "Reverse endian PCAP\n");
 	u32 cnt = 0;
 	while (!feof(input_file))
 	{
@@ -74,6 +96,14 @@ int main()
 		// Read PCAP packet header
 		int rlen = fread(&pcap_pkt, 1, sizeof(PCAPPacket_t), input_file);
 		if (rlen != sizeof(PCAPPacket_t)) break;
+
+		if (isReverseEndian)
+		{
+			pcap_pkt.sec = swap32(pcap_pkt.sec);
+			pcap_pkt.nsec = swap32(pcap_pkt.nsec);
+			pcap_pkt.length_capture = swap32(pcap_pkt.length_capture);
+			pcap_pkt.length_wire = swap32(pcap_pkt.length_wire);
+		}
 
 		// validate size
 		if ((pcap_pkt.length_capture == 0) || (pcap_pkt.length_capture > 128*1024))
