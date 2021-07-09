@@ -1,6 +1,6 @@
 # pcap2erf
 
-Convert nanosecond PCAP format to
+Convert PCAP format to
 [ERF](https://www.endace.com/erf-extensible-record-format-types.pdf).
 
 Usage:
