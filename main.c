@@ -32,6 +32,10 @@ void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 	erf.type = ERF_TYPE_ETH;
 	erf.flags = 0;
 	erf.rlen = swap16(sizeof(ERFPacket_t) + 2 + payload_len);
+
+	// assert that downcasting PCAP.length_capture (32) to ERF.rlen (16 bit) is ok
+	assert(payload_len < 1<<16);
+
 	erf.lctr = 0;
 	erf.wlen = swap16(pcap_pkt->length_wire);
 
@@ -87,6 +91,8 @@ int main()
 	}
 
 	if (isReverseEndian) fprintf(stderr, "Reverse endian PCAP\n");
+
+	// Read every PCAP packet and convert to ERF
 	u32 cnt = 0;
 	while (!feof(input_file))
 	{
@@ -105,7 +111,7 @@ int main()
 			pcap_pkt.length_wire = swap32(pcap_pkt.length_wire);
 		}
 
-		// validate size
+		// validate packet size
 		if ((pcap_pkt.length_capture == 0) || (pcap_pkt.length_capture > 128*1024))
 		{
 			fprintf(stderr, "Invalid packet length: %i\n", pcap_pkt.length_capture);
