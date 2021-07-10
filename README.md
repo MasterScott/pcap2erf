@@ -1,7 +1,6 @@
 # pcap2erf
 
-Convert PCAP format to
-[ERF](https://www.endace.com/erf-extensible-record-format-types.pdf).
+Convert PCAP format to ERF.
 
 Usage:
 
