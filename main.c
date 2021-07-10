@@ -1,3 +1,11 @@
+//---------------------------------------------------------------------------------------------
+//
+// Copyright (c) 2021, fmad engineering llc
+//
+// The MIT License (MIT) see LICENSE file for details
+//
+//---------------------------------------------------------------------------------------------
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
