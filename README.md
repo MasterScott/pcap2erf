@@ -11,7 +11,7 @@ cat sample.pcap | ./pcap2erf > sample.erf
 ```
 
 
-#performance
+# performance
 
 
 Mostly limited by IO thoughput. example below is reading from SSD and writing to /dev/null
