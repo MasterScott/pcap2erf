@@ -51,7 +51,7 @@ void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 	size_t wlen = fwrite(&erf, 1, sizeof(ERFPacket_t), output_file);
 	assert(wlen == sizeof(ERFPacket_t));
 	// 2 bytes null padding
-	wlen = fwrite(&erf_eth_pad, 2, 1, output_file);
+	wlen = fwrite(&erf_eth_pad, 1, 2, output_file);
 	assert(wlen == 2);
 	// Write payload
 	wlen = fwrite(payload, 1, payload_len, output_file);
