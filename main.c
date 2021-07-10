@@ -32,8 +32,7 @@ void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 
 	// The high 32-bits contain the integer number of seconds since the start of
 	// time (unix epoch time).
-	u64 TS = ((u64) pcap_pkt->sec << 32) | (
-		(u64) TS_low);
+	u64 TS = ((u64) pcap_pkt->sec << 32) | ( (u64) TS_low);
 
 	// Copy over PCAP details to ERF
 	erf.ts = TS;
@@ -100,6 +99,9 @@ int main()
 
 	if (isReverseEndian) fprintf(stderr, "Reverse endian PCAP\n");
 
+	// max packet size of 64K 
+	u8 *payload = malloc(64*1024);
+
 	// Read every PCAP packet and convert to ERF
 	u32 cnt = 0;
 	while (!feof(input_file))
@@ -127,7 +129,6 @@ int main()
 		}
 
 		// Read payload
-		u8 *payload = malloc(pcap_pkt.length_capture);
 		rlen = fread(payload, 1, pcap_pkt.length_capture, input_file);
 		if (rlen != pcap_pkt.length_capture)
 		{
@@ -137,10 +138,11 @@ int main()
 
 		// Write PCAP header + payload as ERF record
 		write_erf(&pcap_pkt, payload, rlen);
-		free(payload);
 
 		cnt++;
 	}
+
+	free(payload);
 
 	fprintf(stderr, "Converted %u PCAP packets to ERF\n", cnt);
 
