@@ -52,7 +52,7 @@ typedef struct
 
 // --------------------------------------------------------------------------------
 /** ERF type:
- *  https://www.endace.com/erf-extensible-record-format-types.pdf
+ *  https://wiki.wireshark.org/ERF
  */
 typedef struct erf_pkt {
 	u64  ts;		/**< ERF timestamp */
