@@ -10,11 +10,15 @@ DEF += -g
 
 LIBS =
 
+LDFLAG =
+LDFLAG += -static
+LDFLAG += -fPIC
+
 %.o: %.c
-	gcc $(DEF) -c -o $@ -g $<
+	gcc $(LDFLAG) $(DEF) -c -o $@ -g $<
 
 all: $(OBJS)
-	gcc -g -o pcap2erf $(OBJS) $(LIBS)
+	gcc $(LDFLAG) -g -o pcap2erf $(OBJS) $(LIBS)
 
 clean:
 	rm -f $(OBJS) pcap2erf

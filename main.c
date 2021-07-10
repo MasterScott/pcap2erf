@@ -143,4 +143,6 @@ int main()
 	}
 
 	fprintf(stderr, "Converted %u PCAP packets to ERF\n", cnt);
+
+	return 0;
 }
