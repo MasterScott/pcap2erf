@@ -15,7 +15,7 @@
 
 u32 t_scale = 1;
 u8 erf_eth_pad[2] = {0, 0};
-u8 isReverseEndian = 0;
+u8 is_reverse_endian = 0;
 
 void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 {
@@ -41,7 +41,7 @@ void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 	erf.rlen = swap16(sizeof(ERFPacket_t) + 2 + payload_len);
 
 	// assert that downcasting PCAP.length_capture (32) to ERF.rlen (16 bit) is ok
-	assert(payload_len < 1<<16);
+	assert(payload_len < ERF_MAX_PKTLEN);
 
 	erf.lctr = 0;
 	erf.wlen = swap16(pcap_pkt->length_wire);
@@ -74,22 +74,22 @@ int main()
 	if (magic == PCAPHEADER_MAGIC_USEC)
 	{
 		t_scale = 1000;
-		isReverseEndian = 0;
+		is_reverse_endian = 0;
 	}
 	else if (magic == swap32(PCAPHEADER_MAGIC_USEC))
 	{
 		t_scale = 1000;
-		isReverseEndian = 1;
+		is_reverse_endian = 1;
 	}
 	else if (magic == PCAPHEADER_MAGIC_NANO)
 	{
 		t_scale = 1;
-		isReverseEndian = 0;
+		is_reverse_endian = 0;
 	}
 	else if (magic == swap32(PCAPHEADER_MAGIC_NANO))
 	{
 		t_scale = 1;
-		isReverseEndian = 1;
+		is_reverse_endian = 1;
 	}
 	else
 	{
@@ -97,10 +97,10 @@ int main()
 		return -1;
 	}
 
-	if (isReverseEndian) fprintf(stderr, "Reverse endian PCAP\n");
+	if (is_reverse_endian) fprintf(stderr, "Reverse endian PCAP\n");
 
-	// max packet size of 64K 
-	u8 *payload = malloc(64*1024);
+	// max packet size of 64K
+	u8 *payload = malloc(ERF_MAX_PKTLEN);
 
 	// Read every PCAP packet and convert to ERF
 	u32 cnt = 0;
@@ -113,7 +113,7 @@ int main()
 		int rlen = fread(&pcap_pkt, 1, sizeof(PCAPPacket_t), input_file);
 		if (rlen != sizeof(PCAPPacket_t)) break;
 
-		if (isReverseEndian)
+		if (is_reverse_endian)
 		{
 			pcap_pkt.sec = swap32(pcap_pkt.sec);
 			pcap_pkt.nsec = swap32(pcap_pkt.nsec);
@@ -122,7 +122,7 @@ int main()
 		}
 
 		// validate packet size
-		if ((pcap_pkt.length_capture == 0) || (pcap_pkt.length_capture > 128*1024))
+		if (pcap_pkt.length_capture == 0 || pcap_pkt.length_capture > ERF_MAX_PKTLEN)
 		{
 			fprintf(stderr, "Invalid packet length: %i\n", pcap_pkt.length_capture);
 			break;
