@@ -17,7 +17,7 @@ u32 t_scale = 1;
 u8 erf_eth_pad[2] = {0, 0};
 u8 is_reverse_endian = 0;
 
-void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
+void erf_write(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 {
 	FILE *output_file = stdout;
 
@@ -38,10 +38,18 @@ void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 	erf.ts = TS;
 	erf.type = ERF_TYPE_ETH;
 	erf.flags = 0;
-	erf.rlen = swap16(sizeof(ERFPacket_t) + 2 + payload_len);
+	u16 rlen = sizeof(ERFPacket_t) + 2 + payload_len;
+	u16 align_padding = 0;
+	if (rlen % ERF_ALIGN != 0)
+	{
+		// Align rlen to ERF_ALIGN and write as many null padding bytes after payload
+		align_padding = ERF_ALIGN - (rlen % ERF_ALIGN);
+		rlen += align_padding;
+	}
+	erf.rlen = swap16(rlen);
 
 	// assert that downcasting PCAP.length_capture (32) to ERF.rlen (16 bit) is ok
-	assert(payload_len < ERF_MAX_PKTLEN);
+	assert(rlen < ERF_MAX_PKTLEN);
 
 	erf.lctr = 0;
 	erf.wlen = swap16(pcap_pkt->length_wire);
@@ -54,7 +62,15 @@ void write_erf(PCAPPacket_t *pcap_pkt, u8 *payload, size_t payload_len)
 	assert(wlen == 2);
 	// Write payload
 	wlen = fwrite(payload, 1, payload_len, output_file);
-	assert(wlen = payload_len);
+	assert(wlen == payload_len);
+
+	// Write null padding for alignment
+	wlen = 0;
+	for (u32 i = 0; i < align_padding; i++)
+	{
+		wlen += fwrite(&erf_eth_pad, 1, 1, output_file);
+	}
+	assert(wlen == align_padding);
 }
 
 int main()
@@ -137,7 +153,7 @@ int main()
 		}
 
 		// Write PCAP header + payload as ERF record
-		write_erf(&pcap_pkt, payload, rlen);
+		erf_write(&pcap_pkt, payload, rlen);
 
 		cnt++;
 	}

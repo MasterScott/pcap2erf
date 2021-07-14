@@ -68,8 +68,15 @@ typedef struct erf_pkt {
 static_assert(sizeof(ERFPacket_t) == 16, "ERF size");
 
 #define ERF_TYPE_ETH 2
-// erf.rlen is 16 bits
+
+// 2 bytes of padding required for ETH type, after ERF header and before payload
+#define ERF_ETH_PAD 2
+
+// erf.rlen is 16 bits + 2 bytes of padding
 #define ERF_MAX_PKTLEN (64*1024)
+
+// Align ERF frames to 8-byte boundaries
+#define ERF_ALIGN 8
 
 static inline u32 swap32(const u32 a)
 {
